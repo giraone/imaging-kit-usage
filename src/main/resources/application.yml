@@ -1,0 +1,4 @@
+logging:
+  level:
+    ROOT: INFO
+    com.giraone.imaging.java2: DEBUG
