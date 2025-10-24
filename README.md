@@ -49,7 +49,8 @@ curl -X PUT \
   -H "Thumbnail-Width: 100" \
   -H "Thumbnail-Quality: LOSSY_MEDIUM" \
   --data-binary "@src/test/resources/image-01.jpg" \
-  http://localhost:8080//create-thumbnail
+  --output "thumbnail.jpg" \
+  http://localhost:8080/create-thumbnail
 ```
 
 ### Fetch file info
@@ -123,18 +124,6 @@ curl http://localhost:8080/list-types
 ```
 ["UNKNOWN","JPEG","PNG","TIFF","GIF","BMP","PGM","DICOM","PDF"
 ```
-
-## Test Data
-
-### Test Files (from imaging-kit test resources)
-
-Located in [src/test/resources](src/test/resources):
-
-- **image-01.jpg** - 1024x768 JPEG, 24-bit RGB, 149KB
-- **image-01.png** - 800x600 PNG, 24-bit RGB, 22KB
-- **image-01.gif** - 100x75 GIF, 8-bit RGB, 22KB
-- **document-01-PDF-1.3.pdf** - PDF 1.3 document, 4KB
-- **text.txt** - Plain text file, 21 bytes
 
 ## Release Notes / Changes
 

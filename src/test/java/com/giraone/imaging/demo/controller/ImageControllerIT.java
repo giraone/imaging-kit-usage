@@ -214,6 +214,214 @@ class ImageControllerIT {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+    // PUT /create-thumbnail tests
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @ParameterizedTest
+    @CsvSource({
+        "image-01.jpg,100,LOSSY_MEDIUM",
+        "image-01.jpg,200,LOSSY_LOW",
+        "image-01.jpg,300,LOSSY_HIGH",
+        "image-01.jpg,150,LOSSLESS",
+        "image-01.png,100,LOSSY_MEDIUM",
+        "image-01.gif,100,LOSSY_MEDIUM"
+    })
+    void createThumbnail_creates_thumbnail_with_correct_width(String testFileName, int width, String quality) throws Exception {
+        /// arrange
+        byte[] imageContent = loadTestFile(testFileName);
+        /// act
+        byte[] thumbnailBytes = webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", String.valueOf(width))
+            .header("Thumbnail-Quality", quality)
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(imageContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().exists("Content-Type")
+            .expectBody(byte[].class)
+            .returnResult()
+            .getResponseBody();
+        /// assert
+        assertThat(thumbnailBytes).isNotNull();
+        assertThat(thumbnailBytes.length).isGreaterThan(0);
+        assertThat(thumbnailBytes.length).isLessThan(imageContent.length);
+    }
+
+    @Test
+    void createThumbnail_returns_jpeg_for_jpeg_input() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.IMAGE_JPEG);
+    }
+
+    @Test
+    void createThumbnail_returns_png_for_png_input() throws Exception {
+        /// arrange
+        byte[] pngContent = loadTestFile(TEST_IMAGE_PNG);
+        /// act
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(pngContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.IMAGE_PNG);
+    }
+
+    @Test
+    void createThumbnail_uses_default_width_when_not_specified() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act
+        byte[] thumbnailBytes = webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(byte[].class)
+            .returnResult()
+            .getResponseBody();
+        /// assert
+        assertThat(thumbnailBytes).isNotNull();
+        assertThat(thumbnailBytes.length).isGreaterThan(0);
+    }
+
+    @Test
+    void createThumbnail_uses_default_quality_when_not_specified() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act
+        byte[] thumbnailBytes = webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(byte[].class)
+            .returnResult()
+            .getResponseBody();
+        /// assert
+        assertThat(thumbnailBytes).isNotNull();
+        assertThat(thumbnailBytes.length).isGreaterThan(0);
+    }
+
+    @Test
+    void createThumbnail_returns_bad_request_for_invalid_width() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act & assert - negative width
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "-100")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void createThumbnail_returns_bad_request_for_zero_width() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act & assert
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "0")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void createThumbnail_returns_bad_request_for_excessive_width() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act & assert
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "20000")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void createThumbnail_returns_bad_request_for_invalid_quality() throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act & assert
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .header("Thumbnail-Quality", "INVALID_QUALITY")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void createThumbnail_returns_bad_request_for_empty_content() {
+        /// arrange
+        byte[] emptyContent = new byte[0];
+        /// act & assert
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(emptyContent)
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void createThumbnail_returns_unsupported_media_type_for_text_file() throws Exception {
+        /// arrange
+        byte[] textContent = loadTestFile(TEST_TEXT);
+        /// act & assert
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .header("Thumbnail-Quality", "LOSSY_MEDIUM")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(textContent)
+            .exchange()
+            .expectStatus().isEqualTo(415); // UNSUPPORTED_MEDIA_TYPE
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "LOSSY_LOW",
+        "LOSSY_MEDIUM",
+        "LOSSY_HIGH",
+        "LOSSLESS",
+        "LOSSY_SPEED",
+        "LOSSY_BEST"
+    })
+    void createThumbnail_accepts_all_valid_quality_values(String quality) throws Exception {
+        /// arrange
+        byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
+        /// act & assert
+        webTestClient.put().uri("/create-thumbnail")
+            .header("Thumbnail-Width", "100")
+            .header("Thumbnail-Quality", quality)
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
     // Cross-cutting concerns tests
     // -----------------------------------------------------------------------------------------------------------------
 

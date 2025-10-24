@@ -5,4 +5,4 @@ file="${1:-/c/Home/testfiles/Koala.png}"
 curl -X PUT \
   -H "Content-Type: application/octet-stream" \
   --data-binary "@${file}" \
-  http://localhost:8080/fetch-file-info
+  http://localhost:8080/create-thumbnail
