@@ -2,7 +2,9 @@
 
 ## Version 1.4.0 (unreleased)
 
-- Added Spring Boot integration tests for ImageController
+- Added comprehensive Spring Boot integration tests for ImageController (24 tests covering all endpoints)
+- Migrated integration tests from TestRestTemplate to WebTestClient for improved testing capabilities
+- Added spring-boot-starter-webflux dependency to support WebTestClient
 - Upgrade to imaging-kit 1.4.0
 - Upgrade to spring-boot 3.5.6
 

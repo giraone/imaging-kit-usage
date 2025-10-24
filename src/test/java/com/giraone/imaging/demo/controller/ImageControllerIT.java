@@ -10,12 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.ByteArrayOutputStream;
@@ -60,6 +55,7 @@ class ImageControllerIT {
             .expectStatus().isOk()
             .expectHeader().contentType(MediaType.APPLICATION_JSON) // Normally not necessary
             .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
             .expectBody(typeRef)
             .returnResult()
             .getResponseBody();
@@ -72,34 +68,6 @@ class ImageControllerIT {
             ).toArray(new String[0]));
     }
 
-    @Test
-    void listImageTypes_returns_all_supported_types() {
-        /// act
-        ResponseEntity<String> response = restTemplate.getForEntity("/list-types", String.class);
-        /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).contains("JPEG", "PNG", "GIF", "BMP", "TIFF", "PDF", "DICOM", "PGM", "UNKNOWN");
-    }
-
-    @Test
-    void listImageTypes_returns_json_content_type() {
-        /// act
-        ResponseEntity<String> response = restTemplate.getForEntity("/list-types", String.class);
-        /// assert
-        assertThat(response.getHeaders().getContentType()).isNotNull();
-        assertThat(response.getHeaders().getContentType().includes(MediaType.APPLICATION_JSON)).isTrue();
-    }
-
-    @Test
-    void listImageTypes_returns_exactly_nine_types() {
-        /// act
-        ResponseEntity<List> response = restTemplate.getForEntity("/list-types", List.class);
-        /// assert
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).hasSize(9);
-    }
-
     // -----------------------------------------------------------------------------------------------------------------
     // PUT /detect-size tests
     // -----------------------------------------------------------------------------------------------------------------
@@ -110,15 +78,18 @@ class ImageControllerIT {
         /// arrange
         byte[] fileContent = loadTestFile(fileName);
         /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(fileContent, headers);
-        ResponseEntity<Long> response = restTemplate.exchange("/detect-size", HttpMethod.PUT, request, Long.class);
+        Long result = webTestClient.put().uri("/detect-size")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(fileContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Long.class)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).isEqualTo(fileContent.length);
-        assertThat(response.getBody()).isGreaterThanOrEqualTo(expectedMinSize);
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(fileContent.length);
+        assertThat(result).isGreaterThanOrEqualTo(expectedMinSize);
     }
 
     @Test
@@ -126,13 +97,16 @@ class ImageControllerIT {
         /// arrange
         byte[] emptyContent = new byte[0];
         /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(emptyContent, headers);
-        ResponseEntity<Long> response = restTemplate.exchange("/detect-size", HttpMethod.PUT, request, Long.class);
+        Long result = webTestClient.put().uri("/detect-size")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(emptyContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Long.class)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(0L);
+        assertThat(result).isEqualTo(0L);
     }
 
     @Test
@@ -143,13 +117,16 @@ class ImageControllerIT {
             largeContent[i] = (byte) (i % 256);
         }
         /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(largeContent, headers);
-        ResponseEntity<Long> response = restTemplate.exchange("/detect-size", HttpMethod.PUT, request, Long.class);
+        Long result = webTestClient.put().uri("/detect-size")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(largeContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Long.class)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(1024L * 1024L);
+        assertThat(result).isEqualTo(1024L * 1024L);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -168,13 +145,16 @@ class ImageControllerIT {
         /// arrange
         byte[] jpegContent = loadTestFile(testFileName);
         /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(jpegContent, headers);
-        ResponseEntity<String> response = restTemplate.exchange("/detect-type", HttpMethod.PUT, request, String.class);
+        String result = webTestClient.put().uri("/detect-type")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(expectedBody);
+        assertThat(result).isEqualTo(expectedBody);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -193,14 +173,16 @@ class ImageControllerIT {
         /// arrange
         byte[] jpegContent = loadTestFile(testFileName);
         /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(jpegContent, headers);
-        ResponseEntity<FileInfo> response = restTemplate.exchange("/fetch-file-info", HttpMethod.PUT, request, FileInfo.class);
+        FileInfo fileInfo = webTestClient.put().uri("/fetch-file-info")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(FileInfo.class)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        FileInfo fileInfo = response.getBody();
+        assertThat(fileInfo).isNotNull();
         assertThat(fileInfo.getMimeType()).isEqualTo(expectedMimeType);
         assertThat(fileInfo.getWidth()).isEqualTo(expectedWidth);
         assertThat(fileInfo.getHeight()).isEqualTo(expectedHeight);
@@ -211,26 +193,24 @@ class ImageControllerIT {
     void fetchFileInfo_returns_bad_request_for_unsupported_format() throws Exception {
         /// arrange
         byte[] textContent = loadTestFile(TEST_TEXT);
-        /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(textContent, headers);
-        ResponseEntity<FileInfo> response = restTemplate.exchange("/fetch-file-info", HttpMethod.PUT, request, FileInfo.class);
-        /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        /// act & assert
+        webTestClient.put().uri("/fetch-file-info")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(textContent)
+            .exchange()
+            .expectStatus().isBadRequest();
     }
 
     @Test
     void fetchFileInfo_returns_bad_request_for_empty_content() {
         /// arrange
         byte[] emptyContent = new byte[0];
-        /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        HttpEntity<byte[]> request = new HttpEntity<>(emptyContent, headers);
-        ResponseEntity<FileInfo> response = restTemplate.exchange("/fetch-file-info", HttpMethod.PUT, request, FileInfo.class);
-        /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        /// act & assert
+        webTestClient.put().uri("/fetch-file-info")
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(emptyContent)
+            .exchange()
+            .expectStatus().isBadRequest();
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -241,12 +221,11 @@ class ImageControllerIT {
     void all_endpoints_handle_missing_content_type_header() throws Exception {
         /// arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act - No Content-Type header
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<byte[]> request = new HttpEntity<>(jpegContent, headers);
-        ResponseEntity<String> response = restTemplate.exchange("/detect-type", HttpMethod.PUT, request, String.class);
-        /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        /// act & assert - No Content-Type header
+        webTestClient.put().uri("/detect-type")
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk();
     }
 
     @Test
@@ -254,13 +233,16 @@ class ImageControllerIT {
         /// arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
         /// act
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("image/jpeg"));
-        HttpEntity<byte[]> request = new HttpEntity<>(jpegContent, headers);
-        ResponseEntity<String> response = restTemplate.exchange("/detect-type", HttpMethod.PUT, request, String.class);
+        String result = webTestClient.put().uri("/detect-type")
+            .contentType(MediaType.parseMediaType("image/jpeg"))
+            .bodyValue(jpegContent)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo("JPEG");
+        assertThat(result).isEqualTo("JPEG");
     }
 
     // -----------------------------------------------------------------------------------------------------------------
