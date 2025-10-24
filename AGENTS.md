@@ -51,6 +51,7 @@
   They are perform in the mvn test phase.
 - Integration tests (*@SpringBootTest*) for a class "Clazz.java" are located in the same package as the class under test and named "ClazzIT.java".
   They are perform in the mvn verify phase.
+- For testing REST controllers in integration tests, use *@SpringBootTest* with *@AutoConfigureWebTestClient* and *WebTestClient*.
 - Use AAA pattern for tests (Arrange, Act, Assert) and separate the sections of the test code
   by a three dash comment line containing arrange, act, assert.
 - When testing with multiple test data sets, use JUnit5 parameterized tests (*@ParameterizedTest*).
