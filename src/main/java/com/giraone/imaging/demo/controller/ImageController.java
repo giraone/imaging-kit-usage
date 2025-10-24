@@ -30,10 +30,12 @@ public class ImageController {
     private final ProviderJava2D providerJava2D = new ProviderJava2D();
 
     @GetMapping("/list-types")
-    public ResponseEntity<List<FileTypeDetector.FileType>> listImageTypes() {
+    public ResponseEntity<List<String>> listImageTypes() {
 
         LOGGER.info("/list-types");
-        return ResponseEntity.ok(List.of(UNKNOWN, JPEG, PNG, TIFF, GIF, BMP, PGM, DICOM, PDF));
+        return ResponseEntity.ok(List.of(
+            UNKNOWN.name(), JPEG.name(), PNG.name(), TIFF.name(), GIF.name(), BMP.name(), PGM.name(), DICOM.name(), PDF.name()
+        ));
     }
 
     @PutMapping(value = "/detect-size", consumes = MediaType.ALL_VALUE)
