@@ -47,6 +47,7 @@ Script: [./create-thumbnail.sh](./detect-type.sh) `<file>`
 curl -X PUT \
   -H "Content-Type: application/octet-stream" \
   -H "Thumbnail-Width: 100" \
+  -H "Thumbnail-Height: 100" \
   -H "Thumbnail-Quality: LOSSY_MEDIUM" \
   --data-binary "@src/test/resources/image-01.jpg" \
   --output "thumbnail.jpg" \

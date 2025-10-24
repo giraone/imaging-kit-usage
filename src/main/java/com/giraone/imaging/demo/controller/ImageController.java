@@ -92,11 +92,17 @@ public class ImageController {
     public ResponseEntity<byte[]> createThumbnail(
             InputStream in,
             @RequestHeader(value = "Thumbnail-Width", required = false, defaultValue = "200") int width,
+            @RequestHeader(value = "Thumbnail-Height", required = false, defaultValue = "200") int height,
             @RequestHeader(value = "Thumbnail-Quality", required = false, defaultValue = "LOSSY_MEDIUM") String qualityStr) throws IOException {
 
         // Validate width
         if (width <= 0 || width > 10000) {
             LOGGER.warn("/create-thumbnail invalid width: {}", width);
+            return ResponseEntity.badRequest().build();
+        }
+        // Validate height
+        if (height <= 0 || height > 10000) {
+            LOGGER.warn("/create-thumbnail invalid height: {}", height);
             return ResponseEntity.badRequest().build();
         }
 
@@ -118,7 +124,7 @@ public class ImageController {
         }
         final byte[] imageData = out.toByteArray();
 
-        LOGGER.info("/create-thumbnail {} bytes received, width={}, quality={}", imageData.length, width, quality);
+        LOGGER.info("/create-thumbnail {} bytes received, width={}, height={}, quality={}", imageData.length, width, height, quality);
 
         if (imageData.length == 0) {
             return ResponseEntity.badRequest().build();
@@ -140,7 +146,7 @@ public class ImageController {
             // Create thumbnail using convertImage with ConversionCommand
             ConversionCommand command = new ConversionCommand();
             command.setOutputFormat(outputFormat);
-            command.setDimension(new Dimension(width, width));
+            command.setDimension(new Dimension(width, height));
             command.setQuality(quality);
 
             ByteArrayOutputStream thumbnailOutput = new ByteArrayOutputStream();
