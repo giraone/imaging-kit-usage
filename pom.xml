@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.giraone.imaging</groupId>
-	<artifactId>demo</artifactId>
+	<artifactId>imaging-kit-demo</artifactId>
 	<version>1.4.0</version>
 	<name>imaging-kit-demo</name>
 	<description>Demo project for using imaging-kit</description>

@@ -1,7 +1,9 @@
 # Release Notes and List of Changes
 
-## V1.4.0 (2024-12-28)
-- Upgrade using imaging-kit version 1.4.0
+## V1.4.0 (unreleased)
+
+- Added Spring Boot integration tests for ImageController
+- Upgrade to imaging-kit 1.4.0
 - Upgrade to spring-boot 3.5.6
 
 ## V1.3.0 (2024-12-28)
