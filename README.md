@@ -33,10 +33,24 @@ mvn test -Dtest=ImageControllerIT#listImageTypes_returns_ok_status
 
 ### Create thumbnail
 
-*Create thumbnail* for an image file. Output is the thumbnail image file.
+*Create thumbnail* for an image file. Header parameters:
+- `Thumbnail-Width` - desired width in pixels (height is computed to keep aspect ratio)
+- `Thumbnail-Quality` - desired quality, one of `LOSSY_LOW`, `LOSSY_MEDIUM`, `LOSSY_HIGH`, `LOSSLESS`
 
-URL: `POST http://localhost:8080/detect-type <file>`
+Response output is the thumbnail image file.
+
+URL: `POST http://localhost:8080/create-thumbnail <file>`
 Script: [./create-thumbnail.sh](./detect-type.sh) `<file>`
+
+**Sample Request:**
+```bash
+curl -X PUT \
+  -H "Content-Type: application/octet-stream" \
+  -H "Thumbnail-Width: 100" \
+  -H "Thumbnail-Quality: LOSSY_MEDIUM" \
+  --data-binary "@src/test/resources/image-01.jpg" \
+  http://localhost:8080//create-thumbnail
+```
 
 ### Fetch file info
 
