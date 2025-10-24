@@ -33,9 +33,7 @@ public class ImageController {
     public ResponseEntity<List<String>> listImageTypes() {
 
         LOGGER.info("/list-types");
-        return ResponseEntity.ok(List.of(
-            UNKNOWN.name(), JPEG.name(), PNG.name(), TIFF.name(), GIF.name(), BMP.name(), PGM.name(), DICOM.name(), PDF.name()
-        ));
+        return ResponseEntity.ok(FileTypeDetector.FileType.allTypesAsStrings());
     }
 
     @PutMapping(value = "/detect-size", consumes = MediaType.ALL_VALUE)

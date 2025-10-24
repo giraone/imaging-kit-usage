@@ -15,7 +15,7 @@
 	<description>Demo project for using imaging-kit</description>
 	<properties>
 		<java.version>17</java.version>
-    <imaging-kit.version>1.4.0-SNAPSHOT</imaging-kit.version>
+		<imaging-kit.version>1.4.0-SNAPSHOT</imaging-kit.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -34,6 +34,16 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
+      <scope>test</scope>
+    </dependency>
 	</dependencies>
 
 	<build>

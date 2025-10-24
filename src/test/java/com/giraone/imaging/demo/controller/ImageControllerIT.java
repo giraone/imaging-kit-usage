@@ -7,14 +7,16 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -29,10 +31,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests all REST API endpoints with real Spring Boot context and HTTP calls.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient
 class ImageControllerIT {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private WebTestClient webTestClient;
 
     // Test image files from imaging-kit test resources
     private static final String TEST_IMAGE_JPEG = "image-01.jpg";
@@ -46,11 +49,27 @@ class ImageControllerIT {
     // -----------------------------------------------------------------------------------------------------------------
 
     @Test
-    void listImageTypes_returns_ok_status() {
+    void listImageTypes_returns_correct_list() {
+        /// arrange
+        ParameterizedTypeReference<List<String>> typeRef = new ParameterizedTypeReference<>() {
+        };
         /// act
-        ResponseEntity<List> response = restTemplate.getForEntity("/list-types", List.class);
+        List<String> result = webTestClient.get().uri("/list-types")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON) // Normally not necessary
+            .expectStatus().isOk()
+            .expectBody(typeRef)
+            .returnResult()
+            .getResponseBody();
         /// assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result)
+            .isNotNull()
+            .hasSize(9)
+            .containsExactlyInAnyOrder(List.of(
+                "JPEG", "PNG", "GIF", "BMP", "TIFF", "PDF", "DICOM", "PGM", "UNKNOWN"
+            ).toArray(new String[0]));
     }
 
     @Test
