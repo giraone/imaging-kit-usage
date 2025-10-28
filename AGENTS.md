@@ -53,7 +53,7 @@
   They are perform in the mvn verify phase.
 - For testing REST controllers in integration tests, use *@SpringBootTest* with *@AutoConfigureWebTestClient* and *WebTestClient*.
 - Use AAA pattern for tests (Arrange, Act, Assert) and separate the sections of the test code
-  by a three dash comment line containing arrange, act, assert.
+  by a three slash comment line containing arrange, act, assert , e.g. `/// arrange`.
 - When testing with multiple test data sets, use JUnit5 parameterized tests (*@ParameterizedTest*).
 - When testing for exceptions, use AssertJ's *assertThatThrownBy*.
 - When using temporary files in tests, ensure they are properly deleted after the test execution.

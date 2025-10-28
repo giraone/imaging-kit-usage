@@ -40,7 +40,7 @@ mvn test -Dtest=ImageControllerIT#listImageTypes_returns_ok_status
 Response output is the thumbnail image file.
 
 URL: `POST http://localhost:8080/create-thumbnail <file>`
-Script: [./create-thumbnail.sh](./detect-type.sh) `<file>`
+Script: [./create-thumbnail.sh](./create-thumbnail.sh) `<file>`
 
 **Sample Request:**
 ```bash
