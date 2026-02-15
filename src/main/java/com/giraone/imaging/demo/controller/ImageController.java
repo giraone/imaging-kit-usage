@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import static com.giraone.imaging.ConversionCommand.*;
+
 @SuppressWarnings("unused")
 @Controller
 public class ImageController {
@@ -78,7 +80,7 @@ public class ImageController {
         }
         LOGGER.info("/fetch-file-info {} bytes received", total);
         try {
-            FileInfo fileInfo = providerJava2D.fetchFileInfo(file);
+            final FileInfo fileInfo = providerJava2D.fetchFileInfo(file);
             LOGGER.info("/fetch-file-info {}", fileInfo.dumpInfo());
             return ResponseEntity.ok(fileInfo);
         } catch (FormatNotSupportedException e) {
@@ -195,9 +197,9 @@ public class ImageController {
      */
     private String determineOutputFormat(FileTypeDetector.FileType fileType) {
         return switch (fileType) {
-            case PNG -> "image/png";
-            case GIF -> "image/gif";
-            default -> "image/jpeg";
+            case PNG -> MIME_TYPE_PNG;
+            case GIF -> MIME_TYPE_GIF;
+            default -> MIME_TYPE_JPEG;
         };
     }
 

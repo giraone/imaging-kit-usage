@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.giraone.imaging.ConversionCommand.MIME_TYPE_JPEG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -442,7 +443,7 @@ class ImageControllerIT {
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
         /// act
         String result = webTestClient.put().uri("/detect-type")
-            .contentType(MediaType.parseMediaType("image/jpeg"))
+            .contentType(MediaType.parseMediaType(MIME_TYPE_JPEG))
             .bodyValue(jpegContent)
             .exchange()
             .expectStatus().isOk()
