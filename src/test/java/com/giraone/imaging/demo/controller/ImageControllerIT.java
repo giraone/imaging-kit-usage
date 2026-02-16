@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.giraone.imaging.ConversionCommand.MIME_TYPE_JPEG;
+import static com.giraone.imaging.MimeTypes.IMAGE_JPEG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -63,9 +63,9 @@ class ImageControllerIT {
         /// assert
         assertThat(result)
             .isNotNull()
-            .hasSize(9)
+            .hasSize(11)
             .containsExactlyInAnyOrder(List.of(
-                "JPEG", "PNG", "GIF", "BMP", "TIFF", "PDF", "DICOM", "PGM", "UNKNOWN"
+                "JPEG", "PNG", "GIF", "BMP", "TIFF", "PDF", "DICOM", "PGM", "MARKDOWN", "MP4", "UNKNOWN"
             ).toArray(new String[0]));
     }
 
@@ -443,7 +443,7 @@ class ImageControllerIT {
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
         /// act
         String result = webTestClient.put().uri("/detect-type")
-            .contentType(MediaType.parseMediaType(MIME_TYPE_JPEG))
+            .contentType(MediaType.parseMediaType(IMAGE_JPEG))
             .bodyValue(jpegContent)
             .exchange()
             .expectStatus().isOk()

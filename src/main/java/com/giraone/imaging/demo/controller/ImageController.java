@@ -4,8 +4,11 @@ import com.giraone.imaging.ConversionCommand;
 import com.giraone.imaging.FileInfo;
 import com.giraone.imaging.FileTypeDetector;
 import com.giraone.imaging.FormatNotSupportedException;
-import com.giraone.imaging.ImageConversionException;
-import com.giraone.imaging.java2.ProviderJava2D;
+import com.giraone.imaging.ImagingProvider;
+import com.giraone.imaging.ThumbnailProvider;
+import com.giraone.imaging.pdf.PdfProvider;
+import com.giraone.imaging.text.MarkdownProvider;
+import com.giraone.imaging.video.VideoProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +27,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
-import static com.giraone.imaging.ConversionCommand.*;
+import static com.giraone.imaging.ConversionCommand.CompressionQuality.LOSSLESS;
+import static com.giraone.imaging.MimeTypes.*;
 
 @SuppressWarnings("unused")
 @Controller
@@ -34,7 +40,10 @@ public class ImageController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageController.class);
 
-    private final ProviderJava2D providerJava2D = new ProviderJava2D();
+    private final ImagingProvider imagingProvider = ImagingProvider.getInstance();
+    private final PdfProvider pdfProvider = PdfProvider.getInstance();
+    private final MarkdownProvider markdownProvider = MarkdownProvider.getInstance();
+    private final VideoProvider videoProvider = VideoProvider.getInstance();
 
     @GetMapping("/list-types")
     public ResponseEntity<List<String>> listImageTypes() {
@@ -80,7 +89,7 @@ public class ImageController {
         }
         LOGGER.info("/fetch-file-info {} bytes received", total);
         try {
-            final FileInfo fileInfo = providerJava2D.fetchFileInfo(file);
+            final FileInfo fileInfo = imagingProvider.fetchFileInfo(file);
             LOGGER.info("/fetch-file-info {}", fileInfo.dumpInfo());
             return ResponseEntity.ok(fileInfo);
         } catch (FormatNotSupportedException e) {
@@ -92,10 +101,10 @@ public class ImageController {
 
     @PutMapping(value = "/create-thumbnail", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<byte[]> createThumbnail(
-            InputStream in,
-            @RequestHeader(value = "Thumbnail-Width", required = false, defaultValue = "200") int width,
-            @RequestHeader(value = "Thumbnail-Height", required = false, defaultValue = "200") int height,
-            @RequestHeader(value = "Thumbnail-Quality", required = false, defaultValue = "LOSSY_MEDIUM") String qualityStr) throws IOException {
+        InputStream in,
+        @RequestHeader(value = "Thumbnail-Width", required = false, defaultValue = "200") int width,
+        @RequestHeader(value = "Thumbnail-Height", required = false, defaultValue = "200") int height,
+        @RequestHeader(value = "Thumbnail-Quality", required = false, defaultValue = "LOSSY_MEDIUM") String qualityStr) throws IOException {
 
         // Validate width
         if (width <= 0 || width > 10000) {
@@ -124,50 +133,51 @@ public class ImageController {
         while ((r = in.read(buffer)) >= 0) {
             out.write(buffer, 0, r);
         }
-        final byte[] imageData = out.toByteArray();
+        final byte[] inputFileData = out.toByteArray();
 
-        LOGGER.info("/create-thumbnail {} bytes received, width={}, height={}, quality={}", imageData.length, width, height, quality);
+        LOGGER.info("/create-thumbnail {} bytes received, width={}, height={}, quality={}", inputFileData.length, width, height, quality);
 
-        if (imageData.length == 0) {
+        if (inputFileData.length == 0) {
             return ResponseEntity.badRequest().build();
         }
 
         File inputFile = null;
         try {
             // Detect file type from byte array to determine output format and proper file extension
-            FileTypeDetector.FileType fileType = FileTypeDetector.getInstance().getFileType(imageData);
-            String outputFormat = determineOutputFormat(fileType);
+            FileTypeDetector.FileType fileType = FileTypeDetector.getInstance().getFileType(inputFileData);
+            String inputFormat = determineOutputFormat(fileType);
             String extension = getFileExtension(fileType);
+            ThumbnailProvider thumbnailProvider = ThumbnailProvider.getThumbnailProvider(inputFormat);
 
             // Create temp file with proper extension so ImageOpener can read it
-            inputFile = File.createTempFile("img-in-", extension);
-            try (FileOutputStream fos = new FileOutputStream(inputFile)) {
-                fos.write(imageData);
-            }
+            inputFile = File.createTempFile("file-in-", extension);
+            Files.write(inputFile.toPath(), inputFileData, StandardOpenOption.TRUNCATE_EXISTING);
+            File outputFile = File.createTempFile("thumb-out-", extension);
+            String outputFormat = quality == LOSSLESS ? IMAGE_PNG : IMAGE_JPEG;
 
-            // Create thumbnail using convertImage with ConversionCommand
+            // Create thumbnail using createThumbnail with ConversionCommand
             ConversionCommand command = new ConversionCommand();
+            command.setOutputFile(outputFile);
             command.setOutputFormat(outputFormat);
             command.setDimension(new Dimension(width, height));
             command.setQuality(quality);
+            thumbnailProvider.createThumbnail(inputFile, command);
 
-            ByteArrayOutputStream thumbnailOutput = new ByteArrayOutputStream();
-            providerJava2D.convertImage(inputFile, thumbnailOutput, command);
-
-            byte[] thumbnailBytes = thumbnailOutput.toByteArray();
-            LOGGER.info("/create-thumbnail thumbnail created: {} bytes, format={}", thumbnailBytes.length, outputFormat);
+            long outputByteSize = outputFile.length();
+            LOGGER.info("/create-thumbnail inputFormat={} outputFormat={} outputByteSize={}", inputFormat, outputFormat, outputByteSize);
 
             // Set appropriate content type
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(outputFormat));
-            headers.setContentLength(thumbnailBytes.length);
+            headers.setContentLength(outputByteSize);
 
-            return new ResponseEntity<>(thumbnailBytes, headers, HttpStatus.OK);
+            // return the complete file
+            return new ResponseEntity<>(Files.readAllBytes(outputFile.toPath()), headers, HttpStatus.OK);
 
         } catch (FormatNotSupportedException e) {
             LOGGER.error("/create-thumbnail format not supported", e);
             return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).build();
-        } catch (ImageConversionException e) {
+        } catch (Exception e) {
             LOGGER.error("/create-thumbnail conversion failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } finally {
@@ -186,7 +196,7 @@ public class ImageController {
             case "LOSSY_LOW", "LOSSY_SPEED" -> ConversionCommand.CompressionQuality.LOSSY_SPEED;
             case "LOSSY_MEDIUM" -> ConversionCommand.CompressionQuality.LOSSY_MEDIUM;
             case "LOSSY_HIGH", "LOSSY_BEST" -> ConversionCommand.CompressionQuality.LOSSY_BEST;
-            case "LOSSLESS" -> ConversionCommand.CompressionQuality.LOSSLESS;
+            case "LOSSLESS" -> LOSSLESS;
             default -> throw new IllegalArgumentException("Invalid quality: " + qualityStr);
         };
     }
@@ -197,9 +207,13 @@ public class ImageController {
      */
     private String determineOutputFormat(FileTypeDetector.FileType fileType) {
         return switch (fileType) {
-            case PNG -> MIME_TYPE_PNG;
-            case GIF -> MIME_TYPE_GIF;
-            default -> MIME_TYPE_JPEG;
+            case JPEG -> IMAGE_JPEG;
+            case PNG -> IMAGE_PNG;
+            case GIF -> IMAGE_GIF;
+            case PDF -> APPLICATION_PDF;
+            case MARKDOWN -> TEXT_MARKDOWN;
+            case MP4 -> VIDEO_MP4;
+            default -> DEFAULT;
         };
     }
 
