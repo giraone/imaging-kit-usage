@@ -63,9 +63,9 @@ class ImageControllerIT {
         /// assert
         assertThat(result)
             .isNotNull()
-            .hasSize(9)
+            .hasSize(11)
             .containsExactlyInAnyOrder(List.of(
-                "JPEG", "PNG", "GIF", "BMP", "TIFF", "PDF", "DICOM", "PGM", "UNKNOWN"
+                "JPEG", "PNG", "GIF", "BMP", "TIFF", "PDF", "DICOM", "PGM", "MARKDOWN", "MP4", "UNKNOWN"
             ).toArray(new String[0]));
     }
 
