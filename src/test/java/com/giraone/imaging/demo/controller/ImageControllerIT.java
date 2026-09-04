@@ -7,8 +7,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -46,10 +46,10 @@ class ImageControllerIT {
 
     @Test
     void listImageTypes_returns_correct_list() {
-        /// arrange
+        // arrange
         ParameterizedTypeReference<List<String>> typeRef = new ParameterizedTypeReference<>() {
         };
-        /// act
+        // act
         List<String> result = webTestClient.get().uri("/list-types")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
@@ -60,7 +60,7 @@ class ImageControllerIT {
             .expectBody(typeRef)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(result)
             .isNotNull()
             .hasSize(11)
@@ -76,9 +76,9 @@ class ImageControllerIT {
     @ParameterizedTest
     @MethodSource("provideTestFiles")
     void detectSize_returns_correct_file_size(String fileName, long expectedMinSize) throws Exception {
-        /// arrange
+        // arrange
         byte[] fileContent = loadTestFile(fileName);
-        /// act
+        // act
         Long result = webTestClient.put().uri("/detect-size")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(fileContent)
@@ -87,7 +87,7 @@ class ImageControllerIT {
             .expectBody(Long.class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo(fileContent.length);
         assertThat(result).isGreaterThanOrEqualTo(expectedMinSize);
@@ -95,9 +95,9 @@ class ImageControllerIT {
 
     @Test
     void detectSize_returns_zero_for_empty_content() {
-        /// arrange
+        // arrange
         byte[] emptyContent = new byte[0];
-        /// act
+        // act
         Long result = webTestClient.put().uri("/detect-size")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(emptyContent)
@@ -106,18 +106,18 @@ class ImageControllerIT {
             .expectBody(Long.class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(result).isEqualTo(0L);
     }
 
     @Test
     void detectSize_handles_large_files() {
-        /// arrange
+        // arrange
         byte[] largeContent = new byte[1024 * 1024]; // 1 MB
         for (int i = 0; i < largeContent.length; i++) {
             largeContent[i] = (byte) (i % 256);
         }
-        /// act
+        // act
         Long result = webTestClient.put().uri("/detect-size")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(largeContent)
@@ -126,7 +126,7 @@ class ImageControllerIT {
             .expectBody(Long.class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(result).isEqualTo(1024L * 1024L);
     }
 
@@ -143,9 +143,9 @@ class ImageControllerIT {
         "{TEST_TEXT},UNKNOWN",
     })
     void detectType_detects_correctly(String testFileName, String expectedBody) throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(testFileName);
-        /// act
+        // act
         String result = webTestClient.put().uri("/detect-type")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(jpegContent)
@@ -154,7 +154,7 @@ class ImageControllerIT {
             .expectBody(String.class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(result).isEqualTo(expectedBody);
     }
 
@@ -171,9 +171,9 @@ class ImageControllerIT {
     void fetchFileInfo_returns_image_metadata(String testFileName, String expectedMimeType,
                                               Integer expectedWidth, Integer expectedHeight,
                                               Integer expectedBitsPerPixel) throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(testFileName);
-        /// act
+        // act
         FileInfo fileInfo = webTestClient.put().uri("/fetch-file-info")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(jpegContent)
@@ -182,7 +182,7 @@ class ImageControllerIT {
             .expectBody(FileInfo.class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(fileInfo).isNotNull();
         assertThat(fileInfo.getMimeType()).isEqualTo(expectedMimeType);
         assertThat(fileInfo.getWidth()).isEqualTo(expectedWidth);
@@ -192,9 +192,9 @@ class ImageControllerIT {
 
     @Test
     void fetchFileInfo_returns_bad_request_for_unsupported_format() throws Exception {
-        /// arrange
+        // arrange
         byte[] textContent = loadTestFile(TEST_TEXT);
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/fetch-file-info")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(textContent)
@@ -204,9 +204,9 @@ class ImageControllerIT {
 
     @Test
     void fetchFileInfo_returns_bad_request_for_empty_content() {
-        /// arrange
+        // arrange
         byte[] emptyContent = new byte[0];
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/fetch-file-info")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .bodyValue(emptyContent)
@@ -228,9 +228,9 @@ class ImageControllerIT {
         "image-01.gif,100,LOSSY_MEDIUM"
     })
     void createThumbnail_creates_thumbnail_with_correct_width(String testFileName, int width, String quality) throws Exception {
-        /// arrange
+        // arrange
         byte[] imageContent = loadTestFile(testFileName);
-        /// act
+        // act
         byte[] thumbnailBytes = webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", String.valueOf(width))
             .header("Thumbnail-Quality", quality)
@@ -242,7 +242,7 @@ class ImageControllerIT {
             .expectBody(byte[].class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(thumbnailBytes).isNotNull();
         assertThat(thumbnailBytes.length).isGreaterThan(0);
         assertThat(thumbnailBytes.length).isLessThan(imageContent.length);
@@ -250,9 +250,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_jpeg_for_jpeg_input() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act
+        // act
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -265,9 +265,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_png_for_png_input() throws Exception {
-        /// arrange
+        // arrange
         byte[] pngContent = loadTestFile(TEST_IMAGE_PNG);
-        /// act
+        // act
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -280,9 +280,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_uses_default_width_when_not_specified() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act
+        // act
         byte[] thumbnailBytes = webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -292,16 +292,16 @@ class ImageControllerIT {
             .expectBody(byte[].class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(thumbnailBytes).isNotNull();
         assertThat(thumbnailBytes.length).isGreaterThan(0);
     }
 
     @Test
     void createThumbnail_uses_default_quality_when_not_specified() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act
+        // act
         byte[] thumbnailBytes = webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -311,16 +311,16 @@ class ImageControllerIT {
             .expectBody(byte[].class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(thumbnailBytes).isNotNull();
         assertThat(thumbnailBytes.length).isGreaterThan(0);
     }
 
     @Test
     void createThumbnail_returns_bad_request_for_invalid_width() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act & assert - negative width
+        // act & assert - negative width
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "-100")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -332,9 +332,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_bad_request_for_zero_width() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "0")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -346,9 +346,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_bad_request_for_excessive_width() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "20000")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -360,9 +360,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_bad_request_for_invalid_quality() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .header("Thumbnail-Quality", "INVALID_QUALITY")
@@ -374,9 +374,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_bad_request_for_empty_content() {
-        /// arrange
+        // arrange
         byte[] emptyContent = new byte[0];
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -388,9 +388,9 @@ class ImageControllerIT {
 
     @Test
     void createThumbnail_returns_error_for_text_file() throws Exception {
-        /// arrange
+        // arrange
         byte[] textContent = loadTestFile(TEST_TEXT);
-        /// act & assert - Returns 500 because conversion fails (ImageConversionException)
+        // act & assert - Returns 500 because conversion fails (ImageConversionException)
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .header("Thumbnail-Quality", "LOSSY_MEDIUM")
@@ -410,9 +410,9 @@ class ImageControllerIT {
         "LOSSY_BEST"
     })
     void createThumbnail_accepts_all_valid_quality_values(String quality) throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act & assert
+        // act & assert
         webTestClient.put().uri("/create-thumbnail")
             .header("Thumbnail-Width", "100")
             .header("Thumbnail-Quality", quality)
@@ -428,9 +428,9 @@ class ImageControllerIT {
 
     @Test
     void all_endpoints_handle_missing_content_type_header() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act & assert - No Content-Type header
+        // act & assert - No Content-Type header
         webTestClient.put().uri("/detect-type")
             .bodyValue(jpegContent)
             .exchange()
@@ -439,9 +439,9 @@ class ImageControllerIT {
 
     @Test
     void endpoints_accepting_binary_data_handle_various_content_types() throws Exception {
-        /// arrange
+        // arrange
         byte[] jpegContent = loadTestFile(TEST_IMAGE_JPEG);
-        /// act
+        // act
         String result = webTestClient.put().uri("/detect-type")
             .contentType(MediaType.parseMediaType(IMAGE_JPEG))
             .bodyValue(jpegContent)
@@ -450,7 +450,7 @@ class ImageControllerIT {
             .expectBody(String.class)
             .returnResult()
             .getResponseBody();
-        /// assert
+        // assert
         assertThat(result).isEqualTo("JPEG");
     }
 
