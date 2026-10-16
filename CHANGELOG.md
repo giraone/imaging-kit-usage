@@ -1,5 +1,8 @@
 # Release Notes and List of Changes
 
+## Version 2.1.1 (2026-10-16)
+- Upgrade to imaging-kit 2.1.0 (released version)
+
 ## Version 2.1.0 (2026-09-04)
 - Upgrade to imaging-kit 2.1.0
 - Upgrade to spring-boot 4.1.1
