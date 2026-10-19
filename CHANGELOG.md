@@ -1,7 +1,10 @@
 # Release Notes and List of Changes
 
+## Version 2.2.0 (2026-10-19)
+- Upgrade to imaging-kit 2.2.0 (released version)
+
 ## Version 2.1.1 (2026-10-16)
-- Upgrade to imaging-kit 2.1.0 (released version)
+- Upgrade to imaging-kit 2.1.1 (released version)
 
 ## Version 2.1.0 (2026-09-04)
 - Upgrade to imaging-kit 2.1.0
