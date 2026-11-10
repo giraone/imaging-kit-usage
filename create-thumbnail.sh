@@ -1,6 +1,6 @@
 #!/bin/bash
 
-file="${1:-/c/Home/testfiles/Koala.png}"
+file="${1:-/Users/hans/testfiles/Koala.png}"
 
 curl -X PUT \
   -H "Content-Type: application/octet-stream" \
