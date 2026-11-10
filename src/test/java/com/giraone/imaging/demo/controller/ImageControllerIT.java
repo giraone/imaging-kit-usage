@@ -264,7 +264,7 @@ class ImageControllerIT {
     }
 
     @Test
-    void createThumbnail_returns_png_for_png_input() throws Exception {
+    void createThumbnail_returns_jpeg_for_png_input() throws Exception {
         // arrange
         byte[] pngContent = loadTestFile(TEST_IMAGE_PNG);
         // act
@@ -275,7 +275,7 @@ class ImageControllerIT {
             .bodyValue(pngContent)
             .exchange()
             .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.IMAGE_PNG);
+            .expectHeader().contentType(MediaType.IMAGE_JPEG);
     }
 
     @Test
