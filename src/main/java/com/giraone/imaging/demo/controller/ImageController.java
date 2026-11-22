@@ -168,7 +168,8 @@ public class ImageController {
 
             // Set appropriate content type
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(outputFormat));
+            MediaType mediaType = MediaType.parseMediaType(outputFormat);
+            headers.setContentType(mediaType);
             headers.setContentLength(outputByteSize);
 
             // return the complete file
