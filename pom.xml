@@ -15,7 +15,10 @@
 	<description>Demo project for using imaging-kit</description>
 	<properties>
 		<java.version>25</java.version>
+    <!-- Production dependency versions -->
 		<imaging-kit.version>2.3.0</imaging-kit.version>
+    <!-- Plugin version -->
+    <versions-maven-plugin.version>2.25.3</versions-maven-plugin.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -63,6 +66,16 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+      <!-- mvn versions:update-parent && mvn versions:update-properties && mvn versions:use-latest-versions -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>${versions-maven-plugin.version}</version>
+        <configuration>
+          <rulesUri>file:///${project.basedir}/mvn-versions-rules.xml</rulesUri>
+        </configuration>
+      </plugin>
 		</plugins>
 	</build>
 
